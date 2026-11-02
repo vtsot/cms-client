@@ -1,0 +1,54 @@
+/.idea
+/.docker/mysql/data/*
+/.docker/redis/data/*
+/.docker/.env
+/config/secrets/prod/prod.decrypt.private.php
+/public/assets/
+/public/bundles/
+/public/uploaded/*
+#/tests/_https/*
+/tests/_output/*
+/tests/Support/_generated/*
+/var/cache/dev
+/var/cache/prod
+/var/cache/test
+/var/cache/storage/*
+/var/cache/translations/*
+/var/log/*
+/var/session/*
+/var/share/*
+/var/storage/*
+/vendor/
+/src/Command/TestCommand.php
+/src/Command/Test/*
+/.env.local
+/.env.local.php
+/.env.*.local
+/.php-cs-fixer.cache
+!.htaccess
+!.gitkeep
+/docker-compose.override.yaml
+
+###> symfony/webpack-encore-bundle ###
+/node_modules/
+/public/build/
+npm-debug.log
+yarn-error.log
+###< symfony/webpack-encore-bundle ###
+###> phpunit/phpunit ###
+/phpunit.xml
+/.phpunit.cache/
+###< phpunit/phpunit ###
+
+###> friendsofphp/php-cs-fixer ###
+/.php-cs-fixer.php
+/.php-cs-fixer.cache
+###< friendsofphp/php-cs-fixer ###
+
+###> claude skill test runs ###
+/.claude/skills/*-workspace/
+###< claude skill test runs ###
+
+###> lexik/jwt-authentication-bundle ###
+/config/jwt/*.pem
+###< lexik/jwt-authentication-bundle ###
