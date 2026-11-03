@@ -1,0 +1,18 @@
+framework:
+    http_client:
+        scoped_clients:
+            cms_admin.site_auth.http_client:
+                base_uri: '%env(resolve:CMS_ADMIN_API_AUTH_URL)%'
+                verify_peer: false
+                headers:
+                    'Content-Type': 'application/json'
+                    'Accept-Language': '%env(resolve:LOCALE)%'
+                    'X-Site-Id': '%env(resolve:CMS_ADMIN_SITE_ID)%'
+                    'X-Site-Token': '%env(resolve:CMS_ADMIN_SITE_TOKEN)%'
+
+            cms_admin.site_content.http_client:
+                base_uri: '%env(resolve:CMS_ADMIN_API_CONTENT_URL)%'
+                verify_peer: false
+                headers:
+                    'Content-Type': 'application/json'
+                    Accept-Language': '%env(resolve:LOCALE)%'
