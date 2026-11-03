@@ -15,7 +15,7 @@ readonly class SiteDTOFactory
 
     public function fromAPI(array $data): SiteDTO
     {
-        $mainNavigation = $data['main_navigation']
+        $mainNavigation = $data['main_navigation'] ?? null
             ? $this->navigationDTOFactory->fromAPICollection($data['main_navigation'])
             : null;
 

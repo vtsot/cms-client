@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\CmsAdmin\BannerService;
 use App\Service\CmsAdmin\SiteService;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -20,10 +21,12 @@ class DefaultController extends AbstractController
     )]
     public function __invoke(
         SiteService $siteService,
+        BannerService $bannerService,
         LoggerInterface $logger,
     ): Response {
         dd(
-            $siteService->getSite(true)
+            $siteService->getSite(true),
+            $bannerService->getBanner(true)
         );
 
         return $this->render('web/default/index.html.twig', [
