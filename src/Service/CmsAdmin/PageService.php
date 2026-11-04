@@ -15,6 +15,7 @@ use App\DTOFactory\Data\Page\PageInfoDTOFactory;
 use App\Exception\CommunicationException;
 use App\Service\CmsAdmin\Traits\ResolveErrorsDetailsTrait;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\HttpExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
@@ -31,6 +32,13 @@ final readonly class PageService
         private PageDetailsDTOFactory $pageDetailsDTOFactory,
         private ArticleInfoDTOFactory $articleInfoDTOFactory,
         private ArticleDetailsDTOFactory $articleDetailsDTOFactory,
+
+        #[Autowire(env: 'CMS_ADMIN_CACHING')]
+        private bool $caching,
+
+        #[Autowire(service: 'site.cache')]
+        private CacheInterface $cache,
+
         #[Autowire(service: 'cms_admin.site_content.http_client')]
         private HttpClientInterface $httpClient,
     ) {
@@ -45,67 +53,83 @@ final readonly class PageService
 
     public function getPages(array $query = [], ?bool $throwException = false): PageInfoCollectionDTO
     {
-        try {
-            $token   = $this->auth->login();
-            $request = $this->httpClient->request('GET', 'pages', [
-                'auth_bearer' => $token->token,
-                'query'       => $query,
-            ]);
+        $key = sha1('site-pages' . ($query ? '-' . json_encode($query) : ''));
 
-            $response = $request->toArray();
-        } catch (HttpExceptionInterface|TransportExceptionInterface|DecodingExceptionInterface|Throwable $e) {
-            $response = $e instanceof HttpExceptionInterface ? $e->getResponse() : null;
-            $code     = $e instanceof HttpExceptionInterface ? $response->getStatusCode() : 0;
-            $errors   = $response ? $this->errorsDetailsAsString($response) : null;
+        if (!$this->caching) {
+            $this->cache->delete($key);
+        }
 
-            if ($throwException) {
-                throw new CommunicationException($errors ?? $e->getMessage(), $code, $e);
+        return $this->cache->get($key, function () use ($query, $throwException): PageInfoCollectionDTO {
+            try {
+                $token   = $this->auth->login();
+                $request = $this->httpClient->request('GET', 'pages', [
+                    'auth_bearer' => $token->token,
+                    'query'       => $query,
+                ]);
+
+                $response = $request->toArray();
+            } catch (HttpExceptionInterface|TransportExceptionInterface|DecodingExceptionInterface|Throwable $e) {
+                $response = $e instanceof HttpExceptionInterface ? $e->getResponse() : null;
+                $code     = $e instanceof HttpExceptionInterface ? $response->getStatusCode() : 0;
+                $errors   = $response ? $this->errorsDetailsAsString($response) : null;
+
+                if ($throwException) {
+                    throw new CommunicationException($errors ?? $e->getMessage(), $code, $e);
+                }
+
+                return PageInfoCollectionDTO::fromArray([]);
             }
 
-            return PageInfoCollectionDTO::fromArray([]);
-        }
+            $items = [];
 
-        $items = [];
+            foreach ($response['items'] ?? [] as $item) {
+                $items[] = match ($item['type']) {
+                    PageType::Article->value => $this->articleInfoDTOFactory->fromAPI($item),
+                    default                  => $this->pageInfoDTOFactory->fromAPI($item),
+                };
+            }
 
-        foreach ($response['items'] ?? [] as $item) {
-            $items[] = match ($item['type']) {
-                PageType::Article->value => $this->articleInfoDTOFactory->fromAPI($item),
-                default                  => $this->pageInfoDTOFactory->fromAPI($item),
-            };
-        }
-
-        return PageInfoCollectionDTO::fromArray(
-            items: $items,
-            paginator: $response['meta']['paginator'] ?? [],
-            filters: $response['meta']['filters'] ?? [],
-        );
+            return PageInfoCollectionDTO::fromArray(
+                items: $items,
+                paginator: $response['meta']['paginator'] ?? [],
+                filters: $response['meta']['filters'] ?? [],
+            );
+        });
     }
 
     public function getPage(string $slug, ?bool $throwException = false): PageDetailsDTO|ArticleDetailsDTO|null
     {
-        try {
-            $token   = $this->auth->login();
-            $request = $this->httpClient->request('GET', "pages/{$slug}", [
-                'auth_bearer' => $token->token,
-            ]);
+        $key = sha1('site-page-slug-' . $slug);
 
-            $response = $request->toArray();
-        } catch (HttpExceptionInterface|TransportExceptionInterface|DecodingExceptionInterface|Throwable $e) {
-            $response = $e instanceof HttpExceptionInterface ? $e->getResponse() : null;
-            $code     = $e instanceof HttpExceptionInterface ? $response->getStatusCode() : 0;
-            $errors   = $response ? $this->errorsDetailsAsString($response) : null;
-
-            if ($throwException) {
-                throw new CommunicationException($errors ?? $e->getMessage(), $code, $e);
-            }
-
-            return null;
+        if (!$this->caching) {
+            $this->cache->delete($key);
         }
 
-        return match ($response['type'] ?? null) {
-            PageType::Page->value    => $this->pageDetailsDTOFactory->fromAPI($response),
-            PageType::Article->value => $this->articleDetailsDTOFactory->fromAPI($response),
-            default                  => null,
-        };
+        return $this->cache->get($key, function () use ($slug, $throwException): PageDetailsDTO|ArticleDetailsDTO|null {
+            try {
+                $token   = $this->auth->login();
+                $request = $this->httpClient->request('GET', "pages/{$slug}", [
+                    'auth_bearer' => $token->token,
+                ]);
+
+                $response = $request->toArray();
+            } catch (HttpExceptionInterface|TransportExceptionInterface|DecodingExceptionInterface|Throwable $e) {
+                $response = $e instanceof HttpExceptionInterface ? $e->getResponse() : null;
+                $code     = $e instanceof HttpExceptionInterface ? $response->getStatusCode() : 0;
+                $errors   = $response ? $this->errorsDetailsAsString($response) : null;
+
+                if ($throwException) {
+                    throw new CommunicationException($errors ?? $e->getMessage(), $code, $e);
+                }
+
+                return null;
+            }
+
+            return match ($response['type'] ?? null) {
+                PageType::Page->value    => $this->pageDetailsDTOFactory->fromAPI($response),
+                PageType::Article->value => $this->articleDetailsDTOFactory->fromAPI($response),
+                default                  => null,
+            };
+        });
     }
 }

@@ -23,7 +23,6 @@ class DefaultController extends AbstractController
         options: ['expose' => true],
         methods: ['GET'],
     )]
-    // todo: move to separate controller
     #[Route(
         path: '/{slug}',
         name: 'web.cms',
