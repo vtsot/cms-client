@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Service\CmsAdmin\Traits;
 
-use Symfony\Component\Yaml\Exception\ExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\HttpExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
+use Throwable;
 
 use function array_keys;
 use function array_map;
@@ -18,7 +21,7 @@ trait ResolveErrorsDetailsTrait
     {
         try {
             return $response->toArray(false); // false = don't throw on 4xx/5xx
-        } catch (ExceptionInterface) {
+        } catch (HttpExceptionInterface|TransportExceptionInterface|DecodingExceptionInterface|Throwable) {
             return []; // the error body may be HTML, not JSON
         }
     }

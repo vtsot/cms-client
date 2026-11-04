@@ -1,0 +1,52 @@
+{% extends 'web/layout.main.html.twig' %}
+{# @var \App\DTO\Data\SiteDTO site #}
+{# @var \App\DTO\Data\Page\PageDetailsDTO page #}
+{# @var \App\DTO\Data\Page\ArticleDetailsDTO page #}
+
+
+{% block content %}
+
+    {% block page_navigation %}
+        {% import 'web/_macros/navigation/navigation-tree-macros.html.twig' as functions %}
+
+        {% set mainNavigation = site.mainNavigation %}
+        {% if mainNavigation is not empty %}
+            <strong>Navigation</strong>
+            {{ functions.draw_navigation_tree(site.mainNavigation) }}
+            <hr>
+        {% endif %}
+    {% endblock %}
+
+
+    {% block page_title %}
+        {% if page.title %}
+            <h1>{{ page.title }}</h1>
+        {% endif %}
+    {% endblock %}
+
+
+    {% block before_page_content %}
+    {% endblock %}
+
+
+    {% block page_content %}
+        {% if page.content %}
+            <div>{{ page.content | raw }}</div>
+        {% endif %}
+    {% endblock %}
+
+
+    {% block after_page_content %}
+    {% endblock %}
+
+
+    {% block page_sources %}
+        {% if page.sources %}
+            <div>
+                {{ page.sources | raw }}
+            </div>
+        {% endif %}
+    {% endblock %}
+
+
+{% endblock %}

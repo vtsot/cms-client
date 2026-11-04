@@ -1,0 +1,27 @@
+{% extends 'web/layout.page.html.twig' %}
+{# @var \App\DTO\Data\SiteDTO site #}
+{# @var \App\DTO\Data\Page\PageDetailsDTO page #}
+
+
+{% block after_page_content %}
+
+    {% if page.relatedArticlesTitle and page.relatedArticles %}
+        <h2>{{ page.relatedArticlesTitle }}</h2>
+
+        {# @var \App\DTO\Data\Page\ArticleInfoDTO article #}
+        {% for article in page.relatedArticles %}
+            <div>
+                <h3>{{ article.title }}</h3>
+                <p>
+                    {% if article.image %}
+                        <img src="{{ article.image }}" alt="{{ article.imageAlt }}" style="max-width: 100px;">
+                    {% endif %}
+                    {{ article.description | raw }}
+                </p>
+            </div>
+        {% endfor %}
+
+        <hr>
+    {% endif %}
+
+{% endblock %}

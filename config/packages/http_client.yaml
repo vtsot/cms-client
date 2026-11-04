@@ -6,7 +6,7 @@ framework:
                 verify_peer: false
                 headers:
                     'Content-Type': 'application/json'
-                    'Accept-Language': '%env(resolve:LOCALE)%'
+                    'Accept-Language': '%env(resolve:CMS_ADMIN_LOCALE)%'
                     'X-Site-Id': '%env(resolve:CMS_ADMIN_SITE_ID)%'
                     'X-Site-Token': '%env(resolve:CMS_ADMIN_SITE_TOKEN)%'
 
@@ -15,4 +15,4 @@ framework:
                 verify_peer: false
                 headers:
                     'Content-Type': 'application/json'
-                    Accept-Language': '%env(resolve:LOCALE)%'
+                    'Accept-Language': '%env(resolve:CMS_ADMIN_LOCALE)%'

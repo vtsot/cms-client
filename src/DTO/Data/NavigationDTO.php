@@ -11,7 +11,7 @@ readonly class NavigationDTO
 {
     public function __construct(
         public ?string $title,
-        public mixed /* ?LinkDTO */ $link,
+        public ?LinkDTO $link,
         public array $children = [],
     ) {
     }

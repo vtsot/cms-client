@@ -7,11 +7,17 @@ namespace App\DTOFactory\Data;
 use App\Contract\Dictionary\Link\LinkTarget;
 use App\Contract\Dictionary\Link\LinkType;
 use App\DTO\Data\LinkDTO;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 use function in_array;
 
 readonly class LinkDTOFactory
 {
+    public function __construct(
+        private UrlGeneratorInterface $urlGenerator,
+    ) {
+    }
+
     public function fromAPI(array $data): LinkDTO
     {
         $url  = LinkType::Link->value === ($data['type'] ?? null) && ($data['url'] ?? null) ? $data['url'] : null;
@@ -19,12 +25,26 @@ readonly class LinkDTOFactory
             ? $data['slug']
             : null;
 
+        $type   = ($data['type'] ?? null) ? LinkType::tryFrom($data['type']) : null;
+        $target = ($data['target'] ?? null) ? LinkTarget::tryFrom($data['target']) : null;
+
+        $refType = UrlGeneratorInterface::ABSOLUTE_PATH;
+        $href    = match (true) {
+            $type === LinkType::Page && $slug === 'homepage' => $this->urlGenerator->generate('web.homepage', [], $refType),
+            $type === LinkType::Page && $slug,
+            $type === LinkType::Article && $slug => $this->urlGenerator->generate('web.cms', ['slug' => $slug], $refType),
+            $type === LinkType::Link && $url     => $url,
+
+            default => null,
+        };
+
         return new LinkDTO(
-            $url,
-            $slug,
-            ($data['type'] ?? null) ? LinkType::tryFrom($data['type']) : null,
-            ($data['target'] ?? null) ? LinkTarget::tryFrom($data['target']) : null,
-            (bool) ($data['no_follow'] ?? false),
+            url: $url,
+            slug: $slug,
+            type: $type,
+            target: $target,
+            noFollow: (bool) ($data['no_follow'] ?? false),
+            href: $href,
         );
     }
 }

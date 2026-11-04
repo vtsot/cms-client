@@ -1,0 +1,82 @@
+{# @var \App\DTO\Data\NavigationDTO[] items #}
+{# @var \App\DTO\Data\NavigationDTO item #}
+{# @var \App\DTO\Data\NavigationDTO[] children #}
+
+{% macro draw_navigation_tree(items) %}
+    {% import _self as functions %}
+
+    {% if items %}
+        {% set pageUrl = path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')) %}
+
+        <nav class="navigation">
+            <ul class="navigation__list">
+                {% for item in items %}
+
+                    <li class="first-level">
+                        {% set isCurrent = item.link.href == pageUrl %}
+                        {% set hasActiveChild = functions.has_active_child(item.children, pageUrl) %}
+                        {% set active = isCurrent or hasActiveChild %}
+
+                        <a href="{{ item.link.href ?? 'javascript:void(0)' }}"
+                            {{ item.link.attributes({active, 'title': item.title})|raw }}
+                        >
+                            {{ item.title }}
+                        </a>
+
+                        {% if item.children is not empty %}
+                            {{ functions.draw_navigation_tree_children(item.children) }}
+                        {% endif %}
+                    </li>
+
+                {% endfor %}
+            </ul>
+        </nav>
+    {% endif %}
+{% endmacro %}
+
+
+{% macro draw_navigation_tree_children(items) %}
+    {% import _self as functions %}
+    {% if items %}
+        {% set pageUrl = path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')) %}
+
+        <ul class="navigation__list--submenu">
+            {% for item in items %}
+                <li>
+                    {% set isCurrent = item.link.href == pageUrl %}
+                    {% set hasActiveChild = functions.has_active_child(item.children, pageUrl) %}
+                    {% set active = isCurrent or hasActiveChild %}
+
+                    <a href="{{ item.link.href ?? 'javascript:void(0)' }}"
+                        {{ item.link.attributes({active, 'title': item.title})|raw }}
+                    >
+                        {{ item.title }}
+                    </a>
+
+                    {% if item.children is not empty %}
+                        {{ functions.draw_navigation_tree_children(item.children) }}
+                    {% endif %}
+                </li>
+
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+{% endmacro %}
+
+
+{% macro has_active_child(items, pageUrl) %}
+    {% import _self as functions %}
+    {% set found = false %}
+
+    {% if items is not empty %}
+        {% for item in items %}
+            {% if item.link.href == pageUrl or functions.has_active_child(item.children, pageUrl) %}
+                {% set found = true %}
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    {# Return result: Twig macros always output strings, so an empty string evaluates to false, and '1' to true #}
+    {{ found ? '1' : '' }}
+{% endmacro %}

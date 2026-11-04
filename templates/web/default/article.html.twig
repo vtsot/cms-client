@@ -1,0 +1,16 @@
+{% extends 'web/layout.page.html.twig' %}
+{# @var \App\DTO\Data\SiteDTO site #}
+{# @var \App\DTO\Data\Page\ArticleDetailsDTO page #}
+
+
+{% block before_page_content %}
+
+    {% if page.image %}
+        <img src="{{ page.image }}" alt="{{ page.imageAlt }}" style="max-width: 100%;">
+    {% endif %}
+
+    {% if page.description %}
+        <div>{{ page.description | raw }}</div>
+    {% endif %}
+
+{% endblock %}

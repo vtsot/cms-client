@@ -8,6 +8,8 @@ use App\DTOFactory\Data\SiteDTOFactory;
 
 /**
  * @see SiteDTOFactory
+ *
+ * @property array<int, NavigationDTO> $mainNavigation
  */
 readonly class SiteDTO
 {
@@ -16,7 +18,6 @@ readonly class SiteDTO
         public ?string $title,
         public ?string $description,
         public ?string $homepage,
-        /** @var NavigationDTO[] */
         public ?array $mainNavigation,
     ) {
     }
